@@ -1,20 +1,17 @@
-import { useState,useEffect } from 'react'
-
-import './App.css'
-import { MapContainer,Marker,TileLayer,Popup} from "react-leaflet"
-import "leaflet/dist/leaflet.css";
-
-
+import { useState, useEffect } from 'react';
+import './App.css';
+import { MapContainer, Marker, TileLayer, Popup, useMapEvents } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
 
 function App() {
-  const [userLocation, setUserLocation] = useState(null);
+  const [markerPosition, setMarkerPosition] = useState(null);
 
   useEffect(() => {
     
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const { latitude, longitude } = position.coords;
-        setUserLocation([latitude, longitude]); 
+        setMarkerPosition([latitude, longitude]); 
       },
       (error) => {
         console.error('Erro ao obter localização:', error);
@@ -22,25 +19,35 @@ function App() {
     );
   }, []);
 
-  console.log(userLocation);
   
+  function MapClickHandler() {
+    useMapEvents({
+      click(event) {
+        const { lat, lng } = event.latlng;
+        setMarkerPosition([lat, lng]); 
+        console.log(`Mapa clicado em: Latitude ${lat}, Longitude ${lng}`);
+      }
+    });
+    return null; 
+  }
 
   return (
     <div className='p-5 bg-zinc-800 flex justify-center w-fit h-fit m-auto'>
       <div className='leaflet-container'>
-        {userLocation ? (
-          <MapContainer center={userLocation} zoom={13} scrollWheelZoom={true} style={{ height: '100vh', width: '100vw' }}>
+        {markerPosition ? (
+          <MapContainer center={markerPosition} zoom={13} scrollWheelZoom={false} style={{ height: '100vh', width: '100vw' }}>
             <TileLayer
               url="http://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}"
             />
-            <Marker position={userLocation}>
+            <MapClickHandler /> {/* Este componente está registrando os cliques no mapa */}
+            <Marker position={markerPosition}>
               <Popup>
-                Sua localização
+                Latitude: {markerPosition[0]}, Longitude: {markerPosition[1]}
               </Popup>
             </Marker>
           </MapContainer>
         ) : (
-          <p>Obtendo localização...</p> 
+          <p>Obtendo localização...</p>
         )}
       </div>
     </div>
